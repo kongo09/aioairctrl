@@ -9,8 +9,8 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "aiocoap==0.4.3",
         "pycryptodomex",
+        "aiocoap==0.4.3",
     ],
     entry_points={
         "console_scripts": [
