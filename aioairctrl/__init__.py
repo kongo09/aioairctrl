@@ -1,2 +1,2 @@
-_version__ = "0.0.1"
+_version__ = "0.2.1"
 from aioairctrl.coap.client import Client as CoAPClient
