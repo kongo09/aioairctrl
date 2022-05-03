@@ -7,6 +7,7 @@ from aiocoap import (
     Context,
     GET,
     Message,
+    CON,
     NON,
     POST,
 )
@@ -113,7 +114,7 @@ class Client:
         payload_encrypted = self._encryption_context.encrypt(payload)
         request = Message(
             code=POST,
-            mtype=NON,
+            mtype=CON,
             uri=f"coap://{self.host}:{self.port}{self.CONTROL_PATH}",
             payload=payload_encrypted.encode(),
         )
