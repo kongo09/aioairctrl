@@ -1,2 +1,3 @@
 # aioairctrl
-library and commandline utilities for controlling philips air purifiers (using encrypted CoAP)
+
+Library and commandline utilities for controlling Philips air purifiers (using encrypted CoAP)
