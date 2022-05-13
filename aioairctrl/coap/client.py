@@ -71,13 +71,10 @@ class Client:
         state_reported = json.loads(payload)
         max_age = 60
         try:
-            # These logging messages can be removed, they are here because i wanted to find the timeout value
-            logger.error(f"{response = }")
-            logger.error(f"{response.opt = }")
-            logger.error(f"{response.opt.max_age = }")
             max_age = response.opt.max_age
+            logger.debug(f"max age = {max_age}")
         except:
-            pass
+            logger.debug(f"no max age found in CoAP options")
         return state_reported["state"]["reported"], max_age
 
     async def observe_status(self):
