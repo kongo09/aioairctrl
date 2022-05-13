@@ -69,7 +69,13 @@ class Client:
         payload = self._encryption_context.decrypt(payload_encrypted)
         logger.debug("status: %s", payload)
         state_reported = json.loads(payload)
-        return state_reported["state"]["reported"]
+        max_age = 60
+        try:
+            max_age = response.opt.max_age
+            logger.debug(f"max age = {max_age}")
+        except:
+            logger.debug(f"no max age found in CoAP options")
+        return state_reported["state"]["reported"], max_age
 
     async def observe_status(self):
         def decrypt_status(response):
