@@ -18,7 +18,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "pycryptodomex",
-        "aiocoap==0.4.3",
+        "aiocoap @ git+https://git@github.com/chrysn/aiocoap@master#egg=aiocoap",
     ],
     python_requires=">=3.6",
     entry_points={
