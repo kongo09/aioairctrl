@@ -18,7 +18,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "pycryptodomex",
-        "aiocoap==0.4.3",
+        "aiocoap>=0.4.1, <0.5",
     ],
     python_requires=">=3.6",
     entry_points={
