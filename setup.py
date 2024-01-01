@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="aioairctrl",
-    version="0.2.4",
+    version="0.2.5",
     description="Library for controlling Philips air purifiers (using encrypted CoAP)",
     long_description=long_description,
     author="betaboon",
@@ -18,7 +18,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "pycryptodomex",
-        "aiocoap>=0.4.5, <0.5",
+        "aiocoap>=0.4.7, <0.5",
     ],
     python_requires=">=3.6",
     entry_points={
