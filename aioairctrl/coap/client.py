@@ -1,16 +1,19 @@
+"""Client to interact with the aiocoap library."""
 import json
 import logging
 import os
 
-from aioairctrl.coap import aiocoap_monkeypatch  # noqa: F401
 from aiocoap import (
     Context,
-    GET,
     Message,
     NON,
+)
+from aiocoap.numbers.codes import (
+    GET,
     POST,
 )
 
+from aioairctrl.coap import aiocoap_monkeypatch  # noqa: F401
 from aioairctrl.coap.encryption import EncryptionContext
 
 logger = logging.getLogger(__name__)
