@@ -33,7 +33,12 @@ class Client:
     async def _init(self):
         self._client_context = await Context.create_client_context()
         self._encryption_context = EncryptionContext()
-        await self._sync()
+        try:
+            await self._sync()
+        except Exception as ex:
+            logger.error("Error during sync: %s", ex)
+            self._client_context.shutdown()
+            raise ex
 
     @classmethod
     async def create(cls, *args, **kwargs):
