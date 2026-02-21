@@ -81,8 +81,8 @@ class Client:
         try:
             max_age = response.opt.max_age
             logger.debug(f"max age = {max_age}")
-        except:
-            logger.debug(f"no max age found in CoAP options")
+        except Exception:
+            logger.debug("no max age found in CoAP options")
         return state_reported["state"]["reported"], max_age
 
     async def observe_status(self):
