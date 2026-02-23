@@ -1,4 +1,5 @@
 """Client to interact with the aiocoap library."""
+import asyncio
 import json
 import logging
 import os
@@ -35,11 +36,11 @@ class Client:
         self._encryption_context = EncryptionContext()
         try:
             await self._sync()
-        except Exception as ex:
-            logger.error("Error during sync: %s", ex)
-            self._client_context.shutdown()
-            raise ex
-
+        except asyncio.CancelledError:
+            logger.debug("Init cancelled. Shutting down client context...")
+            if self._client_context:
+                await self._client_context.shutdown()
+            raise
     @classmethod
     async def create(cls, *args, **kwargs):
         obj = cls(*args, **kwargs)
