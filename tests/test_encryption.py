@@ -58,10 +58,15 @@ class TestClientKeyCounter:
         encrypted = ctx.encrypt("x")
         assert encrypted[:8] == "00000002"
 
-    def test_counter_wraps_at_overflow(self, ctx):
+    def test_counter_at_max_value(self, ctx):
         ctx._client_key = "FFFFFFFE"
         ctx.encrypt("x")
         assert ctx._client_key == "FFFFFFFF"
+
+    def test_counter_wraps_at_overflow(self, ctx):
+        ctx._client_key = "FFFFFFFF"
+        ctx.encrypt("x")
+        assert ctx._client_key == "00000000"
 
 
 class TestDigestValidation:

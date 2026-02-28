@@ -2,7 +2,6 @@
 import json
 import logging
 import os
-from typing import Optional
 
 from aiocoap import (
     NON,
@@ -27,18 +26,29 @@ class Client:
     def __init__(self, host, port=5683):
         self.host = host
         self.port = port
-        self._client_context: Optional[Context] = None
-        self._encryption_context: Optional[EncryptionContext] = None
+        self._client_context: Context | None = None
+        self._encryption_context: EncryptionContext | None = None
+
+    @property
+    def _ctx(self) -> Context:
+        if self._client_context is None:
+            raise RuntimeError("Client not initialized; use Client.create()")
+        return self._client_context
+
+    @property
+    def _enc(self) -> EncryptionContext:
+        if self._encryption_context is None:
+            raise RuntimeError("Client not initialized; use Client.create()")
+        return self._encryption_context
 
     async def _init(self):
         self._client_context = await Context.create_client_context()
         self._encryption_context = EncryptionContext()
         try:
             await self._sync()
-        except Exception as ex:
-            logger.error("Error during sync: %s", ex)
+        except BaseException:
             await self._client_context.shutdown()
-            raise ex
+            raise
 
     @classmethod
     async def create(cls, *args, **kwargs):
@@ -59,12 +69,10 @@ class Client:
             uri=f"coap://{self.host}:{self.port}{self.SYNC_PATH}",
             payload=sync_request.encode(),
         )
-        assert self._client_context is not None
-        response = await self._client_context.request(request).response
+        response = await self._ctx.request(request).response
         client_key = response.payload.decode()
         logger.debug("synced: %s", client_key)
-        assert self._encryption_context is not None
-        self._encryption_context.set_client_key(client_key)
+        self._enc.set_client_key(client_key)
 
     async def get_status(self):
         logger.debug("retrieving status")
@@ -74,26 +82,21 @@ class Client:
             uri=f"coap://{self.host}:{self.port}{self.STATUS_PATH}",
         )
         request.opt.observe = 0
-        assert self._client_context is not None
-        response = await self._client_context.request(request).response
+        response = await self._ctx.request(request).response
         payload_encrypted = response.payload.decode()
-        assert self._encryption_context is not None
-        payload = self._encryption_context.decrypt(payload_encrypted)
+        payload = self._enc.decrypt(payload_encrypted)
         logger.debug("status: %s", payload)
         state_reported = json.loads(payload)
         max_age = 60
-        try:
+        if response.opt.max_age is not None:
             max_age = response.opt.max_age
-            logger.debug(f"max age = {max_age}")
-        except Exception:
-            logger.debug("no max age found in CoAP options")
+            logger.debug("max age = %s", max_age)
         return state_reported["state"]["reported"], max_age
 
     async def observe_status(self):
         def decrypt_status(response):
             payload_encrypted = response.payload.decode()
-            assert self._encryption_context is not None
-            payload = self._encryption_context.decrypt(payload_encrypted)
+            payload = self._enc.decrypt(payload_encrypted)
             logger.debug("observation status: %s", payload)
             status = json.loads(payload)
             return status["state"]["reported"]
@@ -105,13 +108,17 @@ class Client:
             uri=f"coap://{self.host}:{self.port}{self.STATUS_PATH}",
         )
         request.opt.observe = 0
-        assert self._client_context is not None
-        requester = self._client_context.request(request)
-        response = await requester.response
-        yield decrypt_status(response)
-        assert requester.observation is not None
-        async for response in requester.observation:
+        requester = self._ctx.request(request)
+        observation = requester.observation
+        try:
+            response = await requester.response
             yield decrypt_status(response)
+            if observation is not None:
+                async for response in observation:
+                    yield decrypt_status(response)
+        finally:
+            if observation is not None:
+                observation.cancel()
 
     async def set_control_value(self, key, value, retry_count=5, resync=True) -> bool:
         return await self.set_control_values(
@@ -131,26 +138,27 @@ class Client:
         }
         payload = json.dumps(state_desired)
         logger.debug("REQUEST: %s", payload)
-        assert self._encryption_context is not None
-        payload_encrypted = self._encryption_context.encrypt(payload)
-        request = Message(
-            code=POST,
-            mtype=NON,
-            uri=f"coap://{self.host}:{self.port}{self.CONTROL_PATH}",
-            payload=payload_encrypted.encode(),
-        )
-        assert self._client_context is not None
-        response = await self._client_context.request(request).response
-        logger.debug("RESPONSE: %s", response.payload)
-        result = json.loads(response.payload)
-        if result.get("status") == "success":
-            return True
-        else:
-            if resync:
-                logger.debug("set_control_value failed. resyncing...")
+        for attempt in range(retry_count + 1):
+            payload_encrypted = self._enc.encrypt(payload)
+            request = Message(
+                code=POST,
+                mtype=NON,
+                uri=f"coap://{self.host}:{self.port}{self.CONTROL_PATH}",
+                payload=payload_encrypted.encode(),
+            )
+            response = await self._ctx.request(request).response
+            logger.debug("RESPONSE: %s", response.payload)
+            result = json.loads(response.payload)
+            if result.get("status") == "success":
+                return True
+            if attempt == 0 and resync:
+                logger.debug("set_control_value failed, resyncing...")
                 await self._sync()
-            if retry_count > 0:
-                logger.debug("set_control_value failed. retrying...")
-                return await self.set_control_values(data, retry_count - 1, resync)
-            logger.error("set_control_value failed: %s", data)
-            return False
+            else:
+                logger.debug(
+                    "set_control_value failed, retrying (attempt %d/%d)...",
+                    attempt + 1,
+                    retry_count,
+                )
+        logger.error("set_control_value failed: %s", data)
+        return False
