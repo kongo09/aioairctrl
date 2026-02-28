@@ -14,7 +14,6 @@ from aiocoap.numbers.codes import (
     POST,
 )
 
-from aioairctrl.coap import aiocoap_monkeypatch  # noqa: F401
 from aioairctrl.coap.encryption import EncryptionContext
 
 logger = logging.getLogger(__name__)
