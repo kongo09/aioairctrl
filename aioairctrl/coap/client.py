@@ -4,9 +4,9 @@ import logging
 import os
 
 from aiocoap import (
+    NON,
     Context,
     Message,
-    NON,
 )
 from aiocoap.numbers.codes import (
     GET,
