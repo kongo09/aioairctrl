@@ -15,8 +15,8 @@ def _deduplicate_message(self, message):
 
 MessageManager._deduplicate_message = _deduplicate_message
 
+from aiocoap.error import LibraryShutdown, NotObservable, ObservationCancelled
 from aiocoap.protocol import ClientObservation
-from aiocoap.error import ObservationCancelled, NotObservable, LibraryShutdown
 
 
 def __del__(self):
