@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+from typing import Optional
 
 from aiocoap import (
     NON,
@@ -27,8 +28,8 @@ class Client:
     def __init__(self, host, port=5683):
         self.host = host
         self.port = port
-        self._client_context = None
-        self._encryption_context = None
+        self._client_context: Optional[Context] = None
+        self._encryption_context: Optional[EncryptionContext] = None
 
     async def _init(self):
         self._client_context = await Context.create_client_context()
@@ -37,7 +38,7 @@ class Client:
             await self._sync()
         except Exception as ex:
             logger.error("Error during sync: %s", ex)
-            self._client_context.shutdown()
+            await self._client_context.shutdown()
             raise ex
 
     @classmethod
@@ -59,9 +60,11 @@ class Client:
             uri=f"coap://{self.host}:{self.port}{self.SYNC_PATH}",
             payload=sync_request.encode(),
         )
+        assert self._client_context is not None
         response = await self._client_context.request(request).response
         client_key = response.payload.decode()
         logger.debug("synced: %s", client_key)
+        assert self._encryption_context is not None
         self._encryption_context.set_client_key(client_key)
 
     async def get_status(self):
@@ -72,8 +75,10 @@ class Client:
             uri=f"coap://{self.host}:{self.port}{self.STATUS_PATH}",
         )
         request.opt.observe = 0
+        assert self._client_context is not None
         response = await self._client_context.request(request).response
         payload_encrypted = response.payload.decode()
+        assert self._encryption_context is not None
         payload = self._encryption_context.decrypt(payload_encrypted)
         logger.debug("status: %s", payload)
         state_reported = json.loads(payload)
@@ -88,6 +93,7 @@ class Client:
     async def observe_status(self):
         def decrypt_status(response):
             payload_encrypted = response.payload.decode()
+            assert self._encryption_context is not None
             payload = self._encryption_context.decrypt(payload_encrypted)
             logger.debug("observation status: %s", payload)
             status = json.loads(payload)
@@ -100,18 +106,20 @@ class Client:
             uri=f"coap://{self.host}:{self.port}{self.STATUS_PATH}",
         )
         request.opt.observe = 0
+        assert self._client_context is not None
         requester = self._client_context.request(request)
         response = await requester.response
         yield decrypt_status(response)
+        assert requester.observation is not None
         async for response in requester.observation:
             yield decrypt_status(response)
 
-    async def set_control_value(self, key, value, retry_count=5, resync=True) -> None:
+    async def set_control_value(self, key, value, retry_count=5, resync=True) -> bool:
         return await self.set_control_values(
             data={key: value}, retry_count=retry_count, resync=resync
         )
 
-    async def set_control_values(self, data: dict, retry_count=5, resync=True) -> None:
+    async def set_control_values(self, data: dict, retry_count=5, resync=True) -> bool:
         state_desired = {
             "state": {
                 "desired": {
@@ -124,6 +132,7 @@ class Client:
         }
         payload = json.dumps(state_desired)
         logger.debug("REQUEST: %s", payload)
+        assert self._encryption_context is not None
         payload_encrypted = self._encryption_context.encrypt(payload)
         request = Message(
             code=POST,
@@ -131,6 +140,7 @@ class Client:
             uri=f"coap://{self.host}:{self.port}{self.CONTROL_PATH}",
             payload=payload_encrypted.encode(),
         )
+        assert self._client_context is not None
         response = await self._client_context.request(request).response
         logger.debug("RESPONSE: %s", response.payload)
         result = json.loads(response.payload)

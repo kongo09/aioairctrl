@@ -18,6 +18,8 @@ class EncryptionContext:
         self._client_key = client_key
 
     def _increment_client_key(self):
+        if self._client_key is None:
+            raise ValueError("Client key must be set before incrementing")
         client_key_next = (int(self._client_key, 16) + 1).to_bytes(4, byteorder="big").hex().upper()
         self._client_key = client_key_next
 
@@ -36,6 +38,8 @@ class EncryptionContext:
     def encrypt(self, payload: str) -> str:
         self._increment_client_key()
         key = self._client_key
+        if key is None:
+            raise ValueError("Client key must be set before encryption")
         plaintext_padded = pad(payload.encode(), 16, style="pkcs7")
         cipher = self._create_cipher(key)
         ciphertext = cipher.encrypt(plaintext_padded).hex().upper()
