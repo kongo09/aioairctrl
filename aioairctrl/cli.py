@@ -112,12 +112,12 @@ async def async_main() -> None:
         elif args.command == "set":
             data = {}
             for e in args.values:
-                k, v = e.split("=")
+                k, v = e.split("=", 1)
                 if v == "true":
                     v = True
                 elif v == "false":
                     v = False
-                if args.value_as_int:
+                elif args.value_as_int:
                     try:
                         v = int(v)
                     except ValueError:
@@ -125,7 +125,7 @@ async def async_main() -> None:
                         data = None
                         break
                 data[k] = v
-            if data:
+            if data is not None:
                 await client.set_control_values(data=data)
     except (KeyboardInterrupt, asyncio.CancelledError):
         pass
