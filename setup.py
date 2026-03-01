@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="aioairctrl",
-    version="0.3.0",
+    use_scm_version=True,
     description="Library for controlling Philips air purifiers (using encrypted CoAP)",
     long_description=long_description,
     author="betaboon",
