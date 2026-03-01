@@ -1,0 +1,10 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # pyright is intentionally excluded from pre-commit: it requires the full
+  # project venv and takes 10-30s to start. It runs in CI (typecheck job) instead.

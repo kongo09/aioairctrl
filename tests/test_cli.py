@@ -6,6 +6,7 @@ import pytest
 
 def _parse(argv):
     from aioairctrl.cli import parse_args
+
     with patch("sys.argv", ["aioairctrl"] + argv):
         return parse_args()
 

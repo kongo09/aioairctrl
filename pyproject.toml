@@ -8,3 +8,11 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+include = ["aioairctrl", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -184,6 +184,7 @@ class TestKnownVectors:
 
     def test_decrypt_device_1_is_valid_json(self):
         import json
+
         ctx = EncryptionContext()
         result = ctx.decrypt(self.DEVICE_1_ENCRYPTED)
         parsed = json.loads(result)
@@ -191,6 +192,7 @@ class TestKnownVectors:
 
     def test_decrypt_device_2_is_valid_json(self):
         import json
+
         ctx = EncryptionContext()
         result = ctx.decrypt(self.DEVICE_2_ENCRYPTED)
         parsed = json.loads(result)

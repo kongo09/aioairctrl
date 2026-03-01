@@ -10,6 +10,7 @@ The client_key embedded in the payload is a 4-byte big-endian counter
 Key derivation: MD5("JiangPan" + client_key), split into two equal halves.
 The first half becomes the AES-128 key, the second half the CBC IV.
 """
+
 import hashlib
 
 from Cryptodome.Cipher import AES

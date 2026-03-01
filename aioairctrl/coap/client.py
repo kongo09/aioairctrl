@@ -1,4 +1,5 @@
 """CoAP client for Philips air purifiers."""
+
 import json
 import logging
 import os
@@ -108,6 +109,7 @@ class Client:
 
     async def observe_status(self):
         """Async generator that yields state_reported dicts as the device pushes updates."""
+
         def decrypt_status(response):
             payload_encrypted = response.payload.decode()
             payload = self._enc.decrypt(payload_encrypted)
