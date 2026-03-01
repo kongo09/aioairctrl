@@ -108,11 +108,13 @@ async def async_main() -> None:
                     print(json.dumps(status))
                 else:
                     print(status)
-                sys.stdout.flush()
+                sys.stdout.flush()  # needed when output is piped
         elif args.command == "set":
             data = {}
             for e in args.values:
                 k, v = e.split("=", 1)
+                # Bool coercion must come before int so "true"/"false" are
+                # never passed to int(), which would silently return 1/0.
                 if v == "true":
                     v = True
                 elif v == "false":
@@ -125,6 +127,8 @@ async def async_main() -> None:
                         data = None
                         break
                 data[k] = v
+            # data is None only when int conversion failed; an empty dict is
+            # valid (caller built no pairs) and should still be sent.
             if data is not None:
                 await client.set_control_values(data=data)
     except (KeyboardInterrupt, asyncio.CancelledError):
