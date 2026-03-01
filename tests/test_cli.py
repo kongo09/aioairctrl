@@ -1,7 +1,7 @@
-import pytest
-
 # parse_args calls parser.parse_args() which reads sys.argv, so we patch it
 from unittest.mock import patch
+
+import pytest
 
 
 def _parse(argv):

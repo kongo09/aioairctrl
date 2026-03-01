@@ -26,17 +26,19 @@ class EncryptionContext:
 
     def __init__(self):
         # Hex-encoded 4-byte counter, e.g. "00A3F1C2". None until set_client_key is called.
-        self._client_key = None
+        self._client_key: str | None = None
 
     def set_client_key(self, client_key):
         self._client_key = client_key
 
-    def _increment_client_key(self):
+    def _increment_client_key(self) -> str:
         if self._client_key is None:
             raise ValueError("Client key must be set before incrementing")
         # Wrap around at 0xFFFFFFFF so the counter stays within 4 bytes.
-        client_key_next = ((int(self._client_key, 16) + 1) % 0x100000000).to_bytes(4, byteorder="big").hex().upper()
+        next_int = (int(self._client_key, 16) + 1) % 0x100000000
+        client_key_next = next_int.to_bytes(4, byteorder="big").hex().upper()
         self._client_key = client_key_next
+        return client_key_next
 
     def _create_cipher(self, key: str):
         # Derive a 32-char hex digest, then split it: first half → AES key, second half → IV.
@@ -54,8 +56,7 @@ class EncryptionContext:
     def encrypt(self, payload: str) -> str:
         # Increment first so the key embedded in the output is always ahead of
         # the last key seen by the device, preventing replay of old counters.
-        self._increment_client_key()
-        key = self._client_key
+        key = self._increment_client_key()
         plaintext_padded = pad(payload.encode(), 16, style="pkcs7")
         cipher = self._create_cipher(key)
         ciphertext = cipher.encrypt(plaintext_padded).hex().upper()
