@@ -35,7 +35,7 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: |
-          pip install pyright
+          pip install pyright pytest
           pip install -e .
       - run: pyright
 
