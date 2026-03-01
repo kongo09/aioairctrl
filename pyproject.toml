@@ -2,6 +2,26 @@
 requires = ["setuptools>=42", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "aioairctrl"
+dynamic = ["version"]
+description = "Library for controlling Philips air purifiers (using encrypted CoAP)"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {text = "MIT"}
+authors = [{name = "betaboon"}]
+requires-python = ">=3.12"
+dependencies = [
+    "pycryptodomex",
+    "aiocoap>=0.4.17, <0.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/kongo09/aioairctrl"
+"Bug Tracker" = "https://github.com/kongo09/aioairctrl/issues"
+
+[project.scripts]
+aioairctrl = "aioairctrl.__main__:main"
+
 [tool.setuptools_scm]
 
 [tool.ruff]
