@@ -8,6 +8,7 @@ setuptools.setup(
     use_scm_version=True,
     description="Library for controlling Philips air purifiers (using encrypted CoAP)",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     author="betaboon",
     url="https://github.com/kongo09/aioairctrl",
     project_urls={
