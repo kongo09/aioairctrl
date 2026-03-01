@@ -45,7 +45,7 @@ class Client:
         return self._encryption_context
 
     async def _init(self):
-        self._client_context = await Context.create_client_context()
+        self._client_context = await Context.create_client_context(transports=["simple6"])
         self._encryption_context = EncryptionContext()
         try:
             await self._sync()
